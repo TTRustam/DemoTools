@@ -48,7 +48,7 @@
 #'     age1 = seq(0,75,5),
 #'     age2 = seq(0,75,5),
 #'     sex = "f",
-#'     mlt_family = "West",
+#'     mlt_family = "CD_West",
 #'     method = "match",
 #'     ages_fit = seq(0,75,5))$selected_level
 #' }
@@ -77,8 +77,8 @@ intercensal_survival <- function(c1,
                                  mlt_e0_logit_feeney = NULL,
                                  span_pre_smooth     = NULL,
                                  mlt_input_data      = NULL,
-                                 HIV_prev            = NULL,
-                                 HIV_art             = NULL,
+                                 # HIV_prev            = NULL,
+                                 # HIV_art             = NULL,
                                  extrapLaw           = "makeham",
                                  verbose             = TRUE) {
     
@@ -113,19 +113,19 @@ intercensal_survival <- function(c1,
     
   
   # is HIV prevalence and ART correction considered
-  if ((is.null(HIV_prev) + is.null(HIV_art)) == 0) { 
-    
-    is.HIV <-  TRUE
-    
-  } else if ((is.null(HIV_prev) + is.null(HIV_art)) == 2) { 
-    
-    is.HIV <-  FALSE  
-    
-  } else {
-      
-    stop("To apply the HIV correction you need to provide both prevalence and antiretroviral therapy or ignore both")
-    
-    }
+  # if ((is.null(HIV_prev) + is.null(HIV_art)) == 0) { 
+  #   
+  #   is.HIV <-  TRUE
+  #   
+  # } else if ((is.null(HIV_prev) + is.null(HIV_art)) == 2) { 
+  #   
+  #   is.HIV <-  FALSE  
+  #   
+  # } else {
+  #     
+  #   stop("To apply the HIV correction you need to provide both prevalence and antiretroviral therapy or ignore both")
+  #   
+  #   }
     
   # check input method
   method <- match.arg(method, c("match", "bproj", "fproj", "var-r", "feeney", "logit"))
@@ -153,7 +153,7 @@ intercensal_survival <- function(c1,
   
   # Same as the code below. Actually in our case these functions do nothing.
   # Is it because we have matching ages? 
-  # c1 <- groupAges(c1, N = age_int, OAnew = OAG) # are we sure we want this behavior?
+  # c1 <- groupAges(c1, N = age1, OAnew = OAG) # are we sure we want this behavior?
   # c2 <- groupAges(c2, N = age_int, OAnew = OAG)
   
   c1 <-   data.frame(c1 = c1,
@@ -277,21 +277,21 @@ intercensal_survival <- function(c1,
   } else {
     
     # check for HIV correction
-    if(!is.HIV) {
+    # if(!is.HIV) {
+    #   
+    #   this_sex <- ifelse(sex == "f", 2, 1)
+    #   
+    #   mlt_this_family_all_ages <- MLTlookup |> 
+    #     subset(type %in% mlt_family, sex == this_sex)
+    #   
+    #   # e0 should be rounded to proximate available level
+    #   mlt_e0_logit_feeney <- round(mlt_e0_logit_feeney / 2.5, 0) * 2.5
       
-      this_sex <- ifelse(sex == "f", 2, 1)
+    # } else {
       
-      mlt_this_family_all_ages <- MLTlookup |> 
-        subset(type %in% mlt_family, sex == this_sex)
-      
-      # e0 should be rounded to proximate available level
-      mlt_e0_logit_feeney <- round(mlt_e0_logit_feeney / 2.5, 0) * 2.5
-      
-    } else {
-      
-      if(is.null(q01_q05[2]) | is.null(HIV_art)) {
+      if(is.null(q01_q05[2]) ) { # | is.null(HIV_art)
         
-        stop("needs 5q0 input and/or HIV ART correction")
+        stop("needs 5q0 input and") # /or HIV ART correction
         
       }
       
@@ -304,8 +304,8 @@ intercensal_survival <- function(c1,
         hiv_svd_comp_x <- predictNQX(this_sex, 
                                       cm  = q01_q05[2], 
                                       am  = x, 
-                                      hiv = HIV_prev, 
-                                      art = HIV_art, 
+                                      # hiv = HIV_prev, 
+                                      # art = HIV_art, 
                                       adult = "q45") |> 
           subset(select = 1, drop = TRUE)
         
@@ -571,7 +571,7 @@ intercensal_survival <- function(c1,
     
     lx_mlt_level <- lapply(mlt_family, function(X) { # Same here
       
-      if (is.null(mlt_e0_logit_feeney) | is.HIV) {
+      if (is.null(mlt_e0_logit_feeney)) { # | is.HIV
         
         # message("logit e0 input is taken from match method level result")
         
@@ -1371,8 +1371,8 @@ revcumsumSkipNA <- function(x) {
 predictNQX <- function(sex, 
                        cm, 
                        am = NULL, 
-                       hiv, 
-                       art, 
+                       # hiv, 
+                       # art, 
                        adult, 
                        im = NULL) {
   
@@ -1399,9 +1399,9 @@ predictNQX <- function(sex,
   if(missing(am)) {
     
     preds.aml <- data.frame(cm  = as.numeric(cm),
-                            cml = as.numeric(cml),
-                            hiv = as.numeric(hiv),
-                            art = as.numeric(art)
+                            cml = as.numeric(cml)
+                            # hiv = as.numeric(hiv),
+                            # art = as.numeric(art)
     )
     
     aml <- predict(mods.r[[sex]][[adult]]$aml, 
@@ -1414,9 +1414,9 @@ predictNQX <- function(sex,
   }
   
   preds.vs <- data.frame(cml = as.numeric(cml),
-                         aml = as.numeric(aml),
-                         hiv = as.numeric(hiv),
-                         art = as.numeric(art)
+                         aml = as.numeric(aml)
+                         # hiv = as.numeric(hiv),
+                         # art = as.numeric(art)
   )
   
   v1 <- predict(mods.r[[sex]][[adult]]$v1, newdata = preds.vs)
